@@ -1,0 +1,298 @@
+{
+ "totalHits": 70744,
+ "limit": 3,
+ "offset": 0,
+ "results": [
+  {
+   "acceptedDate": "",
+   "arxivId": null,
+   "authors": [
+    {
+     "name": "DRONE-Proj"
+    }
+   ],
+   "citationCount": 0,
+   "contributors": [],
+   "outputs": [
+    "https://api.core.ac.uk/v3/outputs/212449249"
+   ],
+   "createdDate": "2020-01-25T07:24:03+00:00",
+   "dataProviders": [
+    {
+     "id": 324,
+     "name": "ZENODO",
+     "url": "https://api.core.ac.uk/v3/data-providers/324",
+     "logo": "https://api.core.ac.uk/data-providers/324/logo"
+    }
+   ],
+   "depositedDate": "2018-12-20T13:32:33+00:00",
+   "abstract": "&lt;p&gt;This is the first release for DRONE.&lt;/p&gt",
+   "documentType": null,
+   "doi": "10.5281/zenodo.2450167",
+   "downloadUrl": "",
+   "fieldOfStudy": null,
+   "fullText": "Not available for public API users.",
+   "id": 147353571,
+   "identifiers": [
+    {
+     "identifier": "212449249",
+     "type": "core_id"
+    },
+    {
+     "identifier": "10.5281/zenodo.2450167",
+     "type": "doi"
+    },
+    {
+     "identifier": "oai:zenodo.org:2450167",
+     "type": "oai_id"
+    },
+    {
+     "identifier": "oai:zenodo.org:2450167",
+     "type": "oai"
+    }
+   ],
+   "title": "DRONE-Proj/DRONE: First release of DRONE",
+   "language": null,
+   "magId": null,
+   "oaiIds": [
+    "oai:zenodo.org:2450167"
+   ],
+   "publishedDate": "2018-12-20T00:00:00+00:00",
+   "publisher": "Zenodo",
+   "pubmedId": null,
+   "references": [],
+   "sourceFulltextUrls": [],
+   "updatedDate": "",
+   "yearPublished": 2018,
+   "journals": [],
+   "links": [
+    {
+     "type": "display",
+     "url": "https://core.ac.uk/works/147353571"
+    }
+   ]
+  },
+  {
+   "acceptedDate": "",
+   "arxivId": null,
+   "authors": [
+    {
+     "name": "Narayanappa Nagaraja"
+    },
+    {
+     "name": "Axel Brockmann"
+    }
+   ],
+   "citationCount": 0,
+   "contributors": [],
+   "outputs": [
+    "https://api.core.ac.uk/v3/outputs/288911"
+   ],
+   "createdDate": "2009-11-06T14:21:06+00:00",
+   "dataProviders": [
+    {
+     "id": 77,
+     "name": "Nature Precedings",
+     "url": "https://api.core.ac.uk/v3/data-providers/77",
+     "logo": "https://api.core.ac.uk/data-providers/77/logo"
+    }
+   ],
+   "depositedDate": "2009-11-06T00:00:00+00:00",
+   "abstract": "The drones of dwarf honeybees assemble at the drone congregation areas close to small trees with dense leafage at the heights between 2 to 4 meters",
+   "documentType": null,
+   "doi": null,
+   "downloadUrl": "https://core.ac.uk/download/288911.pdf",
+   "fieldOfStudy": "Manuscript",
+   "fullText": "Not available for public API users.",
+   "id": 314191,
+   "identifiers": [
+    {
+     "identifier": "288911",
+     "type": "core_id"
+    },
+    {
+     "identifier": "oai:nature.com:10101/npre.2009.3955.1",
+     "type": "oai_id"
+    },
+    {
+     "identifier": "oai:nature.com:10101/npre.2009.3955.1",
+     "type": "oai"
+    }
+   ],
+   "title": "Drone congregation areas of red dwarf honeybee, Apis florea",
+   "language": {
+    "code": "en",
+    "name": "English"
+   },
+   "magId": null,
+   "oaiIds": [
+    "oai:nature.com:10101/npre.2009.3955.1"
+   ],
+   "publishedDate": "",
+   "publisher": "",
+   "pubmedId": null,
+   "references": [
+    {
+     "id": "8722540",
+     "title": "Apis florea drone flight: longevity and flight performance,",
+     "authors": [],
+     "date": "2009",
+     "doi": null,
+     "raw": "Buawangpang, N. Sukumalanand, P. & Burgett, M. Apis florea drone flight: longevity and flight performance, Apidologie 40:20-25 (2009) Legends for Figures"
+    },
+    {
+     "id": "8722541",
+     "title": "Asian Honey bees. Biology, Conservation and Human Interactions.",
+     "authors": [],
+     "date": "2006",
+     "doi": null,
+     "raw": "Oldroyd, B. P & Wongsiri, S. Asian Honey bees. Biology, Conservation and Human Interactions. Harvard University Press. Boston Massachusetts, USA (2006)."
+    },
+    {
+     "id": "8722542",
+     "title": "Comparative mating flight times of Asian honeybees.",
+     "authors": [],
+     "date": null,
+     "doi": null,
+     "raw": "Otis, G. W, Koeniger, N, Rinderer, T. E, Hadisoesilo, S, Yoshida, T, Tingek, S, Wongsiri,  S, & Mardan M . Comparative mating flight times of Asian honeybees. Proc. 7 Int. Conf. On tropical bees and 5 AAA, ed. IBRA, pp 137-141(2000)."
+    },
+    {
+     "id": "8722543",
+     "title": "Congregation of Apis cerana indica Fabricius 1798 in the canopy of trees in Sri Lanka.",
+     "authors": [],
+     "date": null,
+     "doi": null,
+     "raw": "Punchihewa, P.W. K, Koeniger, N & Koeniger, G.  Congregation of Apis cerana indica Fabricius 1798 in the canopy of trees in Sri Lanka. Apidologie 21: 201-208(1990)"
+    },
+    {
+     "id": "8722544",
+     "title": "Drone competition and drone congregation areas in four Apis species.",
+     "authors": [],
+     "date": "2005",
+     "doi": null,
+     "raw": "Koeniger, N. Koeniger, G., Gries, M. & Tingek, S. Drone competition and drone congregation areas in four Apis species. Apidologie 36: 211-221 (2005)"
+    },
+    {
+     "id": "8722545",
+     "title": "Drones of Apis dorsata (Fabricius 1793) congregate under the canopy of tall emergent trees in Borneo. Apidologie",
+     "authors": [],
+     "date": "1994",
+     "doi": null,
+     "raw": "Koeniger, N, Koeniger, G, Tingek, S, Kelitu, A. &  Mardan, M.  Drones of Apis dorsata (Fabricius 1793) congregate under the canopy of tall emergent trees in Borneo. Apidologie 25:249-264 (1994)"
+    },
+    {
+     "id": "8722546",
+     "title": "Drones of the dwarf honeybee Apis florea are attracted to (2E)-9-Oxodecenoic acid and (2E)-10-hydroxydecenoic acid.",
+     "authors": [],
+     "date": "2009",
+     "doi": null,
+     "raw": "Nararaja, N. & Brockmann, A. Drones of the dwarf honeybee Apis florea are attracted to (2E)-9-Oxodecenoic acid and (2E)-10-hydroxydecenoic acid. J. Chem. Ecol. 35: 653-655 (2009)."
+    },
+    {
+     "id": "8722547",
+     "title": "Reproductive isolation among species of the genus Apis. Apidologie",
+     "authors": [],
+     "date": "2000",
+     "doi": null,
+     "raw": "Koeniger, N. &  Koeniger, G. Reproductive isolation among species of the genus Apis. Apidologie 31:313-339 (2000)"
+    }
+   ],
+   "sourceFulltextUrls": [
+    "https://core.ac.uk/download/288911.pdf"
+   ],
+   "updatedDate": "",
+   "yearPublished": 2009,
+   "journals": [],
+   "links": [
+    {
+     "type": "download",
+     "url": "https://core.ac.uk/download/288911.pdf"
+    },
+    {
+     "type": "reader",
+     "url": "https://core.ac.uk/reader/288911"
+    },
+    {
+     "type": "thumbnail_m",
+     "url": "https://core.ac.uk/image/288911/large"
+    },
+    {
+     "type": "thumbnail_l",
+     "url": "https://core.ac.uk/image/288911/large"
+    },
+    {
+     "type": "display",
+     "url": "https://core.ac.uk/works/314191"
+    }
+   ]
+  },
+  {
+   "acceptedDate": "",
+   "arxivId": null,
+   "authors": [
+    {
+     "name": "Drone Engineering Compnay"
+    }
+   ],
+   "citationCount": 0,
+   "contributors": [
+    "Pettinger, Wesley E."
+   ],
+   "outputs": [
+    "https://api.core.ac.uk/v3/outputs/666819710"
+   ],
+   "createdDate": "2025-08-06T14:32:25+01:00",
+   "dataProviders": [
+    {
+     "id": 2313,
+     "name": "UNT (University of North Texas) Digital Library",
+     "url": "https://api.core.ac.uk/v3/data-providers/2313",
+     "logo": "https://api.core.ac.uk/data-providers/2313/logo"
+    }
+   ],
+   "depositedDate": "2025-08-06T14:32:25+01:00",
+   "abstract": "Illustration and description of the Drone Diesel model engine",
+   "documentType": null,
+   "doi": null,
+   "downloadUrl": "",
+   "fieldOfStudy": "Text",
+   "fullText": "Not available for public API users.",
+   "id": 305627111,
+   "identifiers": [
+    {
+     "identifier": "666819710",
+     "type": "core_id"
+    },
+    {
+     "identifier": "info:ark/67531/metadc2438123",
+     "type": "oai_id"
+    },
+    {
+     "identifier": "info:ark/67531/metadc2438123",
+     "type": "unknown"
+    }
+   ],
+   "title": "Model engine data sheets and operating instructions, C - D, 1946, 1950, 1960",
+   "language": null,
+   "magId": null,
+   "oaiIds": [
+    "info:ark/67531/metadc2438123"
+   ],
+   "publishedDate": "",
+   "publisher": "Drone Engineering Compnay",
+   "pubmedId": null,
+   "references": [],
+   "sourceFulltextUrls": [],
+   "updatedDate": "",
+   "yearPublished": 1946,
+   "journals": [],
+   "links": [
+    {
+     "type": "display",
+     "url": "https://core.ac.uk/works/305627111"
+    }
+   ]
+  }
+ ],
+ "searchId": "a80f20ae12723224f77cc1f43f293951"
+}

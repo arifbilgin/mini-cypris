@@ -4,7 +4,7 @@ from pathlib import Path
 
 from flask import Flask, abort, jsonify, request, send_from_directory
 
-from . import db
+from . import core_client, db
 from .routes import api
 
 VERSION = "0.1.0"
@@ -17,11 +17,22 @@ def create_app(test_config=None):
         VERSION=VERSION,
         DATABASE=os.environ.get("DATABASE_PATH", str(DEFAULT_DB)),
         FRONTEND_DIST=os.environ.get("FRONTEND_DIST"),  # set in the container
+        CORE_BASE_URL=os.environ.get("CORE_BASE_URL", core_client.DEFAULT_BASE_URL),
+        CORE_API_KEY=os.environ.get("CORE_API_KEY") or None,  # optional; never logged
+        CORE_TIMEOUT=float(os.environ.get("CORE_TIMEOUT", core_client.DEFAULT_TIMEOUT)),
+        CORE_TRANSPORT=None,  # tests swap in httpx.MockTransport
     )
     if test_config:
         app.config.update(test_config)
 
     db.init_app(app)
+    app.extensions["core"] = core_client.CoreClient(
+        app.config["CORE_BASE_URL"],
+        api_key=app.config["CORE_API_KEY"],
+        timeout=app.config["CORE_TIMEOUT"],
+        user_agent=f"mini-cypris/{VERSION}",
+        transport=app.config["CORE_TRANSPORT"],
+    )
     app.register_blueprint(api, url_prefix="/api")
 
     dist = app.config["FRONTEND_DIST"]
@@ -43,3 +54,4 @@ def create_app(test_config=None):
         return "Not found", 404
 
     return app
+

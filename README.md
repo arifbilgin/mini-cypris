@@ -2,7 +2,7 @@
 
 Search open-access research papers from the [CORE API](https://core.ac.uk/services/api): an Angular app backed by a small Flask service with a SQLite cache.
 
-**Status:** step 1. Hello-world wiring: Angular → Flask → SQLite.
+**Status:** step 2a. Hello-world wiring (Angular → Flask → SQLite) plus a tested client for the CORE API. No search endpoint yet.
 
 ## Run it (Docker, one command)
 
@@ -40,7 +40,8 @@ Port 8000 rather than Flask's default 5000, because macOS uses 5000 for AirPlay.
 ## Tests
 
 ```bash
-cd backend && .venv/bin/python -m pytest      # API
+cd backend && .venv/bin/python -m pytest      # API (no network; CORE is faked)
+cd backend && .venv/bin/python -m pytest -m live   # contract checks against the real CORE API (4 requests)
 cd frontend && npx ng test --watch=false      # Angular
 npx newman run postman/mini-cypris.postman_collection.json -e postman/docker.postman_environment.json   # API contract
 ```
@@ -56,16 +57,44 @@ Unknown `/api/*` paths return a JSON `404`.
 
 **Postman:** import `postman/mini-cypris.postman_collection.json` plus one environment (`local-dev`: port 8000, `docker`: port 8080). Every request has a saved example response and tests.
 
+## Configuration
+
+All optional; set as environment variables.
+
+| Variable | Default | What it does |
+|---|---|---|
+| `CORE_API_KEY` | none | CORE API key, sent as `Authorization: Bearer`. Works without one. Never logged |
+| `CORE_BASE_URL` | `https://api.core.ac.uk/v3` | CORE API root |
+| `CORE_TIMEOUT` | `20` | Seconds to wait for CORE to answer (connecting has its own 5 s limit) |
+| `DATABASE_PATH` | `backend/data/cache.db` | SQLite cache file (`/data/cache.db` in the container) |
+
+## CORE client
+
+`backend/app/core_client.py` is a thin wrapper over [httpx](https://www.python-httpx.org/): it sends the request, checks the response shape, reads CORE's rate-limit headers, and turns every failure into one error type. Records come back exactly as CORE sent them.
+
+| CORE result | Raised as |
+|---|---|
+| 400 (e.g. limit above 100) | `CoreBadQuery` |
+| 429 | `CoreRateLimited` (with `resets_at`) |
+| 5xx, connection failure | `CoreUnavailable` |
+| timeout | `CoreTimeout` (a kind of `CoreUnavailable`) |
+| unreadable body, other status | `CoreUnexpected` |
+
+All of them inherit from `CoreError`. There are no automatic retries: CORE allows about 10 requests per short window, so retries would spend that budget.
+
+CORE quirks the client handles (measured 2026-11-13): `limit` above 100 is a 400; an aggregate field with no matches comes back as `[]`, not `{}`; the rate-limit reset time is an ISO timestamp, not seconds. A malformed boolean query is *not* an error at CORE (it still returns results), so query checks belong in our API.
+
 ## Layout
 
 ```
 backend/
   app/
     __init__.py     create_app(); serves the built app when FRONTEND_DIST is set
+    core_client.py  CORE API client (httpx): requests, errors, rate-limit headers
     db.py           SQLite connection; creates the schema on first start
     routes.py       /api endpoints
     schema.sql      database schema
-  tests/            pytest
+  tests/            pytest; fixtures/ holds real CORE responses
   wsgi.py           entry point (flask run / gunicorn)
 frontend/           Angular 22 app (standalone components, signals)
 postman/            collection + environments
