@@ -9,7 +9,8 @@ SCHEMA = Path(__file__).with_name("schema.sql")
 
 def get_db():
     if "db" not in g:
-        g.db = sqlite3.connect(current_app.config["DATABASE"])
+        # gunicorn threads each get a connection; a writer waits up to 10 s for another
+        g.db = sqlite3.connect(current_app.config["DATABASE"], timeout=10)
         g.db.row_factory = sqlite3.Row
         g.db.execute("PRAGMA foreign_keys = ON")
     return g.db
@@ -29,6 +30,8 @@ def init_db():
     ).fetchone()
     if not exists:
         conn.executescript(SCHEMA.read_text())
+    # readers don't block the writer and vice versa; the setting sticks to the file
+    conn.execute("PRAGMA journal_mode = WAL")
 
 
 def init_app(app):

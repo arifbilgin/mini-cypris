@@ -203,6 +203,329 @@
       ]
     },
     {
+      "name": "Search",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/search?q=drone AND (package OR delivery)&limit=5",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "search"
+          ],
+          "query": [
+            {
+              "key": "q",
+              "value": "drone AND (package OR delivery)"
+            },
+            {
+              "key": "limit",
+              "value": "5"
+            }
+          ]
+        },
+        "description": "Top `limit` papers (1-100, default 10) for a boolean query, served through the SQLite cache. `X-Cache` / `cache.status` says how: MISS (fetched from CORE), HIT (from SQLite), TOPUP (fetched only the missing rows), REFRESH (older than 24 h, fetched again), STALE or PARTIAL (CORE failed, served what was cached)."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test(\"X-Cache says how it was served\", () => pm.expect([\"MISS\",\"HIT\",\"TOPUP\",\"REFRESH\",\"STALE\",\"PARTIAL\"]).to.include(pm.response.headers.get(\"X-Cache\")));",
+              "pm.test(\"at most limit results\", () => { pm.expect(body.count).to.be.at.most(5); pm.expect(body.results.length).to.eql(body.count); });",
+              "pm.test(\"total_hits counts all of CORE\", () => pm.expect(body.total_hits).to.be.at.least(body.count));",
+              "pm.test(\"paper shape\", () => body.results.forEach(p => pm.expect(p).to.have.all.keys(\"id\",\"source\",\"external_id\",\"title\",\"authors\",\"year\",\"publisher\",\"doi\",\"pdf_url\",\"abstract\")));",
+              "pm.test(\"query normalized\", () => pm.expect(body.query).to.eql(\"drone AND (package OR delivery)\"));"
+            ]
+          }
+        }
+      ],
+      "response": [
+        {
+          "name": "200 OK",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/search?q=drone AND (package OR delivery)&limit=5",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "drone AND (package OR delivery)"
+                },
+                {
+                  "key": "limit",
+                  "value": "5"
+                }
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "key": "X-Cache",
+              "value": "MISS"
+            }
+          ],
+          "body": "{\n  \"query\": \"drone AND (package OR delivery)\",\n  \"limit\": 5,\n  \"total_hits\": 4691,\n  \"count\": 5,\n  \"results\": [\n    {\n      \"id\": 1,\n      \"source\": \"core\",\n      \"external_id\": \"158741339\",\n      \"title\": \"Aero Drone Package Delivery System\",\n      \"authors\": [\n        \"…\"\n      ],\n      \"year\": 2021,\n      \"publisher\": null,\n      \"doi\": null,\n      \"pdf_url\": null,\n      \"abstract\": \"…\"\n    },\n    \"…4 more\"\n  ],\n  \"cache\": {\n    \"status\": \"miss\",\n    \"fetched_at\": 1794595200,\n    \"age_seconds\": 0,\n    \"error\": null\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Search again (cache hit)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/search?q=  drone   AND (package OR delivery) &limit=5",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "search"
+          ],
+          "query": [
+            {
+              "key": "q",
+              "value": "  drone   AND (package OR delivery) "
+            },
+            {
+              "key": "limit",
+              "value": "5"
+            }
+          ]
+        },
+        "description": "Same query with extra spaces, right after Search: served from SQLite without calling CORE."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+              "pm.test(\"served from the cache\", () => pm.expect(pm.response.headers.get(\"X-Cache\")).to.eql(\"HIT\"));",
+              "pm.test(\"cache.status hit\", () => pm.expect(pm.response.json().cache.status).to.eql(\"hit\"));",
+              "pm.test(\"fast\", () => pm.expect(pm.response.responseTime).to.be.below(200));"
+            ]
+          }
+        }
+      ],
+      "response": [
+        {
+          "name": "200 OK",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/search?q=  drone   AND (package OR delivery) &limit=5",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "  drone   AND (package OR delivery) "
+                },
+                {
+                  "key": "limit",
+                  "value": "5"
+                }
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "key": "X-Cache",
+              "value": "HIT"
+            }
+          ],
+          "body": "{\n  \"query\": \"drone AND (package OR delivery)\",\n  \"limit\": 5,\n  \"total_hits\": 4691,\n  \"count\": 5,\n  \"results\": [\n    {\n      \"id\": 1,\n      \"source\": \"core\",\n      \"external_id\": \"158741339\",\n      \"title\": \"Aero Drone Package Delivery System\",\n      \"authors\": [\n        \"…\"\n      ],\n      \"year\": 2021,\n      \"publisher\": null,\n      \"doi\": null,\n      \"pdf_url\": null,\n      \"abstract\": \"…\"\n    },\n    \"…4 more\"\n  ],\n  \"cache\": {\n    \"status\": \"hit\",\n    \"fetched_at\": 1794595200,\n    \"age_seconds\": 3,\n    \"error\": null\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Search: missing q",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/search?limit=5",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "search"
+          ],
+          "query": [
+            {
+              "key": "limit",
+              "value": "5"
+            }
+          ]
+        },
+        "description": "No query: 400, CORE is not called."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"400\", () => pm.response.to.have.status(400));",
+              "pm.test(\"bad_request\", () => pm.expect(pm.response.json().error).to.eql(\"bad_request\"));"
+            ]
+          }
+        }
+      ],
+      "response": [
+        {
+          "name": "400 BAD REQUEST",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/search?limit=5",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "5"
+                }
+              ]
+            }
+          },
+          "status": "BAD REQUEST",
+          "code": 400,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"error\": \"bad_request\",\n  \"message\": \"q is required\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "Search: limit too large",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/search?q=drone&limit=101",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "search"
+          ],
+          "query": [
+            {
+              "key": "q",
+              "value": "drone"
+            },
+            {
+              "key": "limit",
+              "value": "101"
+            }
+          ]
+        },
+        "description": "limit above 100 (CORE's page cap): 400, CORE is not called."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"400\", () => pm.response.to.have.status(400));",
+              "pm.test(\"explains the range\", () => pm.expect(pm.response.json().message).to.include(\"1 to 100\"));"
+            ]
+          }
+        }
+      ],
+      "response": [
+        {
+          "name": "400 BAD REQUEST",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/search?q=drone&limit=101",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "drone"
+                },
+                {
+                  "key": "limit",
+                  "value": "101"
+                }
+              ]
+            }
+          },
+          "status": "BAD REQUEST",
+          "code": 400,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"error\": \"bad_request\",\n  \"message\": \"limit must be a whole number from 1 to 100\"\n}"
+        }
+      ]
+    },
+    {
       "name": "Unknown route (404)",
       "request": {
         "method": "GET",

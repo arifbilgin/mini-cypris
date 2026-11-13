@@ -1,10 +1,11 @@
 """Mini-Cypris API: a small Flask service in front of the CORE research-paper API."""
 import os
+import time
 from pathlib import Path
 
 from flask import Flask, abort, jsonify, request, send_from_directory
 
-from . import core_client, db
+from . import cache, core_client, db
 from .routes import api
 
 VERSION = "0.1.0"
@@ -21,6 +22,8 @@ def create_app(test_config=None):
         CORE_API_KEY=os.environ.get("CORE_API_KEY") or None,  # optional; never logged
         CORE_TIMEOUT=float(os.environ.get("CORE_TIMEOUT", core_client.DEFAULT_TIMEOUT)),
         CORE_TRANSPORT=None,  # tests swap in httpx.MockTransport
+        CACHE_TTL=int(os.environ.get("CACHE_TTL_SECONDS", cache.DEFAULT_TTL)),
+        CLOCK=time.time,  # tests swap in a fake clock
     )
     if test_config:
         app.config.update(test_config)
@@ -52,6 +55,12 @@ def create_app(test_config=None):
         if request.path.startswith("/api/"):
             return jsonify(error="not_found", path=request.path), 404
         return "Not found", 404
+
+    @app.errorhandler(500)
+    def server_error(_err):
+        if request.path.startswith("/api/"):
+            return jsonify(error="internal_error", message="something went wrong on our side"), 500
+        return "Server error", 500
 
     return app
 
