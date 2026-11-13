@@ -12,10 +12,15 @@ CORE behaviour this relies on (measured 2026-11-13):
 - every response carries x-ratelimit-limit / -remaining / -retry-after, where
   retry-after is an ISO timestamp such as 2026-11-13T18:31:22+0000.
 - a malformed boolean query is NOT an error: CORE answers 200 with results.
+- a query its search backend rejects (unknown field `TITLE:x`, `yearPublished:abc`)
+  comes back as HTTP 500 with "Azure search failed with status code: 400. ...";
+  that is our caller's mistake, not an outage, so it is raised as CoreBadQuery.
+- a 429 has an empty body.
 """
 from __future__ import annotations
 
 import logging
+import re
 import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -29,6 +34,10 @@ DEFAULT_TIMEOUT = 20.0  # seconds to wait for a response
 DEFAULT_CONNECT_TIMEOUT = 5.0
 MAX_LIMIT = 100  # CORE rejects anything larger with a 400
 USER_AGENT = "mini-cypris"
+
+# CORE's wrapper around its search backend's "bad request" (see module docstring)
+_BACKEND_REJECTED = re.compile(r"status code: 400\b")
+_BACKEND_DETAIL = re.compile(r"message=(.+?)(?:, details=|, request-id=|$)")
 
 log = logging.getLogger(__name__)
 
@@ -204,6 +213,11 @@ class CoreClient:
         if status == 429:
             raise CoreRateLimited("CORE rate limit reached", resets_at=rate.resets_at, status=429, rate=rate)
         if 500 <= status <= 599:
+            text = _message(res)
+            if _BACKEND_REJECTED.search(text):
+                detail = _BACKEND_DETAIL.search(text)
+                reason = detail.group(1).strip() if detail else text
+                raise CoreBadQuery(f"CORE rejected the query: {reason}", status=status, rate=rate)
             raise CoreUnavailable(f"CORE is having trouble (HTTP {status})", status=status, rate=rate)
         raise CoreUnexpected(f"CORE answered HTTP {status}: {_message(res)}", status=status, rate=rate)
 

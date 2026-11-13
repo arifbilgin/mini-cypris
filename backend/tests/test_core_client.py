@@ -763,3 +763,42 @@ def test_bad_timeout_env_fails_at_startup(tmp_path, monkeypatch):
     monkeypatch.setenv("CORE_TIMEOUT", "soon")
     with pytest.raises(ValueError):
         create_app({"TESTING": True, "DATABASE": str(tmp_path / "t.db")})
+
+
+# ----- CORE's 500 that is really a 400 (measured 2026-11-13) ------------------
+
+
+def test_backend_rejection_wrapped_in_500_is_a_bad_query():
+    client, _ = make(answer(500, fixture("core_500_bad_field.json")))
+    with pytest.raises(CoreBadQuery) as err:
+        client.search("TITLE:drone", limit=1)
+    assert str(err.value) == "CORE rejected the query: Illegal arguments in query request: TITLE is not a searchable field."
+    assert err.value.status == 500  # what CORE actually sent
+
+
+def test_backend_rejection_without_details_part():
+    msg = ("Azure search failed with status code: 400. Error context: message=Invalid expression: "
+           "A binary operator with incompatible types was detected.")
+    client, _ = make(answer(500, {"message": msg}))
+    with pytest.raises(CoreBadQuery, match="incompatible types was detected"):
+        client.search("yearPublished:abc", limit=1)
+
+
+def test_backend_rejection_without_message_part_keeps_whole_text():
+    client, _ = make(answer(500, {"message": "Azure search failed with status code: 400."}))
+    with pytest.raises(CoreBadQuery, match="status code: 400"):
+        client.aggregate("TITLE:drone")
+
+
+@pytest.mark.parametrize("code", ["4000", "401", "429", "500", "503"])
+def test_other_backend_statuses_stay_unavailable(code):
+    client, _ = make(answer(500, {"message": f"Azure search failed with status code: {code}. Error context: message=x"}))
+    with pytest.raises(CoreUnavailable):
+        client.search("drone", limit=1)
+
+
+def test_real_429_has_an_empty_body():
+    client, _ = make(answer(429, text="", headers=RATE_HEADERS))
+    with pytest.raises(CoreRateLimited) as err:
+        client.search("drone", limit=1)
+    assert err.value.resets_at == RESET_TS

@@ -1,6 +1,6 @@
 """Contract checks against the real CORE API. Skipped by default; run with: pytest -m live
 
-Four small requests. They guard the facts core_client.py relies on, so we
+Five small requests. They guard the facts core_client.py relies on, so we
 notice if CORE changes behaviour.
 """
 import pytest
@@ -41,3 +41,8 @@ def test_aggregate_counts_by_year(core):
     years = core.aggregate(QUERY).buckets["yearPublished"]
     assert len(years) > 10
     assert sum(years.values()) > 1000
+
+
+def test_unknown_field_is_still_a_500_wrapped_400(core):
+    with pytest.raises(CoreBadQuery, match="not a searchable field"):
+        core.search("TITLE:drone", limit=1)
