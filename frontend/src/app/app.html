@@ -1,0 +1,19 @@
+<main class="shell">
+  <h1>Hello, Mini-Cypris</h1>
+  <p class="sub">Angular {{ angularVersion }} + Flask</p>
+
+  @if (hello(); as h) {
+    <p class="msg">{{ h.message }}</p>
+  } @else if (error()) {
+    <p class="msg error">{{ error() }}</p>
+  } @else {
+    <p class="msg muted">Calling the API…</p>
+  }
+
+  @if (health(); as hc) {
+    <dl class="health">
+      <dt>API</dt><dd>{{ hc.status }} · v{{ hc.version }}</dd>
+      <dt>Database</dt><dd>{{ hc.db }} · {{ hc.tables.join(', ') }}</dd>
+    </dl>
+  }
+</main>

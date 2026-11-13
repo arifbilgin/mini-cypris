@@ -1,0 +1,265 @@
+{
+  "info": {
+    "_postman_id": "d673a673-140e-5d0e-a7de-499e28f66912",
+    "name": "Mini-Cypris API",
+    "description": "Flask API in front of the CORE research-paper API. Set `baseUrl` with an environment: Local dev (8000) or Docker (8080).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/health",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "health"
+          ]
+        },
+        "description": "Service and database status. Lists the SQLite tables created from schema.sql."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+              "pm.test(\"status ok\", () => pm.expect(pm.response.json().status).to.eql(\"ok\"));",
+              "pm.test(\"schema created\", () => pm.expect(pm.response.json().tables).to.include.members([\"papers\",\"searches\",\"search_results\",\"aggregates\"]));"
+            ]
+          }
+        }
+      ],
+      "response": [
+        {
+          "name": "200 OK",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "health"
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"db\": \"ok\",\n  \"status\": \"ok\",\n  \"tables\": [\n    \"aggregates\",\n    \"papers\",\n    \"search_results\",\n    \"searches\"\n  ],\n  \"version\": \"0.1.0\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "Hello",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/hello",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "hello"
+          ]
+        },
+        "description": "Hello-world check. Defaults to name=world."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+              "pm.test(\"default name\", () => pm.expect(pm.response.json().name).to.eql(\"world\"));"
+            ]
+          }
+        }
+      ],
+      "response": [
+        {
+          "name": "200 OK",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/hello",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "hello"
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"message\": \"Hello, world! This is Flask.\",\n  \"name\": \"world\",\n  \"served_at\": 1794583259\n}"
+        }
+      ]
+    },
+    {
+      "name": "Hello with name",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/hello?name=Chris",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "hello"
+          ],
+          "query": [
+            {
+              "key": "name",
+              "value": "Chris"
+            }
+          ]
+        },
+        "description": "Same endpoint with the optional `name` query param (trimmed, max 50 chars)."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+              "pm.test(\"echoes name\", () => pm.expect(pm.response.json().message).to.include(\"Chris\"));"
+            ]
+          }
+        }
+      ],
+      "response": [
+        {
+          "name": "200 OK",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/hello?name=Chris",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "hello"
+              ],
+              "query": [
+                {
+                  "key": "name",
+                  "value": "Chris"
+                }
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"message\": \"Hello, Chris! This is Flask.\",\n  \"name\": \"Chris\",\n  \"served_at\": 1794583259\n}"
+        }
+      ]
+    },
+    {
+      "name": "Unknown route (404)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/nope",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "nope"
+          ]
+        },
+        "description": "Unknown /api paths return a JSON 404, never the app page."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"404\", () => pm.response.to.have.status(404));",
+              "pm.test(\"json error\", () => pm.expect(pm.response.json().error).to.eql(\"not_found\"));"
+            ]
+          }
+        }
+      ],
+      "response": [
+        {
+          "name": "404 NOT FOUND",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/nope",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "nope"
+              ]
+            }
+          },
+          "status": "NOT FOUND",
+          "code": 404,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"error\": \"not_found\",\n  \"path\": \"/api/nope\"\n}"
+        }
+      ]
+    }
+  ]
+}
