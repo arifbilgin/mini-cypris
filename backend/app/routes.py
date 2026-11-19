@@ -13,11 +13,12 @@ from .core_client import (
     CoreUnavailable,
 )
 from .db import get_db
+from .query import QueryError, check
 
 api = Blueprint("api", __name__)
 
 DEFAULT_LIMIT = 10
-MAX_QUERY_LENGTH = 1000  # CORE takes q in the URL; full syntax checks come later
+MAX_QUERY_LENGTH = 1000  # CORE takes q in the URL
 
 
 @api.get("/health")
@@ -111,6 +112,10 @@ def _read_query():
         return None, _error(400, "bad_request", "q is required")
     if len(q) > MAX_QUERY_LENGTH:
         return None, _error(400, "bad_request", f"q is longer than {MAX_QUERY_LENGTH} characters")
+    try:
+        check(q)  # CORE answers a malformed boolean query with results instead of an error
+    except QueryError as exc:
+        return None, (jsonify(error="invalid_query", message=exc.message, position=exc.position), 400)
     return q, None
 
 
