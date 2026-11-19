@@ -240,7 +240,7 @@
               "pm.test(\"X-Cache says how it was served\", () => pm.expect([\"MISS\",\"HIT\",\"TOPUP\",\"REFRESH\",\"STALE\",\"PARTIAL\"]).to.include(pm.response.headers.get(\"X-Cache\")));",
               "pm.test(\"at most limit results\", () => { pm.expect(body.count).to.be.at.most(5); pm.expect(body.results.length).to.eql(body.count); });",
               "pm.test(\"total_hits counts all of CORE\", () => pm.expect(body.total_hits).to.be.at.least(body.count));",
-              "pm.test(\"paper shape\", () => body.results.forEach(p => pm.expect(p).to.have.all.keys(\"id\",\"source\",\"external_id\",\"title\",\"authors\",\"year\",\"publisher\",\"doi\",\"pdf_url\",\"abstract\")));",
+              "pm.test(\"paper shape\", () => body.results.forEach(p => pm.expect(p).to.have.all.keys(\"id\",\"source\",\"external_id\",\"title\",\"authors\",\"year\",\"publisher\",\"doi\",\"pdf_url\",\"abstract\",\"core_url\")));",
               "pm.test(\"query normalized\", () => pm.expect(body.query).to.eql(\"drone AND (package OR delivery)\"));"
             ]
           }
@@ -286,7 +286,7 @@
               "value": "MISS"
             }
           ],
-          "body": "{\n  \"query\": \"drone AND (package OR delivery)\",\n  \"limit\": 5,\n  \"total_hits\": 4691,\n  \"count\": 5,\n  \"results\": [\n    {\n      \"id\": 1,\n      \"source\": \"core\",\n      \"external_id\": \"158741339\",\n      \"title\": \"Aero Drone Package Delivery System\",\n      \"authors\": [\n        \"…\"\n      ],\n      \"year\": 2021,\n      \"publisher\": null,\n      \"doi\": null,\n      \"pdf_url\": null,\n      \"abstract\": \"…\"\n    },\n    \"…4 more\"\n  ],\n  \"cache\": {\n    \"status\": \"miss\",\n    \"fetched_at\": 1794595200,\n    \"age_seconds\": 0,\n    \"error\": null\n  }\n}"
+          "body": "{\n  \"query\": \"drone AND (package OR delivery)\",\n  \"limit\": 5,\n  \"total_hits\": 4691,\n  \"count\": 5,\n  \"results\": [\n    {\n      \"id\": 1,\n      \"source\": \"core\",\n      \"external_id\": \"158741339\",\n      \"title\": \"Aero Drone Package Delivery System\",\n      \"authors\": [\n        \"…\"\n      ],\n      \"year\": 2021,\n      \"publisher\": null,\n      \"doi\": null,\n      \"pdf_url\": null,\n      \"abstract\": \"…\",\n      \"core_url\": \"https://core.ac.uk/works/158741339\"\n    },\n    \"…4 more\"\n  ],\n  \"cache\": {\n    \"status\": \"miss\",\n    \"fetched_at\": 1794595200,\n    \"age_seconds\": 0,\n    \"error\": null\n  }\n}"
         }
       ]
     },
@@ -372,6 +372,165 @@
             }
           ],
           "body": "{\n  \"query\": \"drone AND (package OR delivery)\",\n  \"limit\": 5,\n  \"total_hits\": 4691,\n  \"count\": 5,\n  \"results\": [\n    {\n      \"id\": 1,\n      \"source\": \"core\",\n      \"external_id\": \"158741339\",\n      \"title\": \"Aero Drone Package Delivery System\",\n      \"authors\": [\n        \"…\"\n      ],\n      \"year\": 2021,\n      \"publisher\": null,\n      \"doi\": null,\n      \"pdf_url\": null,\n      \"abstract\": \"…\"\n    },\n    \"…4 more\"\n  ],\n  \"cache\": {\n    \"status\": \"hit\",\n    \"fetched_at\": 1794595200,\n    \"age_seconds\": 3,\n    \"error\": null\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Aggregate by year",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/aggregate?q=drone AND (package OR delivery)",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "aggregate"
+          ],
+          "query": [
+            {
+              "key": "q",
+              "value": "drone AND (package OR delivery)"
+            }
+          ]
+        },
+        "description": "Papers per publication year across ALL matches of `q` (CORE's aggregate endpoint), cached like searches. Years later than next year are dropped (listed in `implausible_years`); `unknown_year` = `total_hits` minus the kept buckets."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test(\"X-Cache says how it was served\", () => pm.expect([\"MISS\",\"HIT\",\"REFRESH\",\"STALE\"]).to.include(pm.response.headers.get(\"X-Cache\")));",
+              "pm.test(\"years oldest first, no impossible years\", () => { const ys = body.years.map(y => y.year); pm.expect(ys).to.eql([...ys].sort((a, b) => a - b)); pm.expect(Math.max(...ys)).to.be.at.most(new Date().getUTCFullYear() + 1); });",
+              "pm.test(\"unknown_year closes the gap to total_hits\", () => { const known = body.years.reduce((s, y) => s + y.count, 0); pm.expect(body.unknown_year).to.eql(Math.max(0, body.total_hits - known)); });",
+              "pm.test(\"shape\", () => pm.expect(body).to.have.all.keys(\"query\",\"field\",\"total_hits\",\"years\",\"unknown_year\",\"implausible_years\",\"cache\"));"
+            ]
+          }
+        }
+      ],
+      "response": [
+        {
+          "name": "200 OK",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/aggregate?q=drone AND (package OR delivery)",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "aggregate"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "drone AND (package OR delivery)"
+                }
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "key": "X-Cache",
+              "value": "MISS"
+            }
+          ],
+          "body": "{\n  \"query\": \"drone AND (package OR delivery)\",\n  \"field\": \"yearPublished\",\n  \"total_hits\": 4691,\n  \"years\": [\n    {\n      \"year\": 1963,\n      \"count\": 1\n    },\n    \"…\",\n    {\n      \"year\": 2026,\n      \"count\": 638\n    },\n    {\n      \"year\": 2027,\n      \"count\": 17\n    }\n  ],\n  \"unknown_year\": 169,\n  \"implausible_years\": {\n    \"2029\": 1,\n    \"2096\": 2,\n    \"9999\": 1\n  },\n  \"cache\": {\n    \"status\": \"miss\",\n    \"fetched_at\": 1794595200,\n    \"age_seconds\": 0,\n    \"error\": null\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Search: invalid boolean query",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/search?q=(drone AND&limit=5",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "search"
+          ],
+          "query": [
+            {
+              "key": "q",
+              "value": "(drone AND"
+            },
+            {
+              "key": "limit",
+              "value": "5"
+            }
+          ]
+        },
+        "description": "Checked before anything reaches CORE (CORE itself would answer a malformed query with results). Costs no CORE request."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"400\", () => pm.response.to.have.status(400));",
+              "const body = pm.response.json();",
+              "pm.test(\"invalid_query with a reason and position\", () => { pm.expect(body.error).to.eql(\"invalid_query\"); pm.expect(body.message).to.include(\"'AND' needs a search term after it\"); pm.expect(body.position).to.eql(7); });"
+            ]
+          }
+        }
+      ],
+      "response": [
+        {
+          "name": "400 BAD REQUEST",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/search?q=(drone AND&limit=5",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "(drone AND"
+                },
+                {
+                  "key": "limit",
+                  "value": "5"
+                }
+              ]
+            }
+          },
+          "status": "BAD REQUEST",
+          "code": 400,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"error\": \"invalid_query\",\n  \"message\": \"'AND' needs a search term after it (character 8)\",\n  \"position\": 7\n}"
         }
       ]
     },
