@@ -5,7 +5,7 @@ from pathlib import Path
 
 from flask import Flask, abort, jsonify, request, send_from_directory
 
-from . import cache, core_client, db
+from . import cache, core_client, db, throttle
 from .routes import api
 
 VERSION = "0.1.0"
@@ -23,6 +23,7 @@ def create_app(test_config=None):
         CORE_TIMEOUT=float(os.environ.get("CORE_TIMEOUT", core_client.DEFAULT_TIMEOUT)),
         CORE_TRANSPORT=None,  # tests swap in httpx.MockTransport
         CACHE_TTL=int(os.environ.get("CACHE_TTL_SECONDS", cache.DEFAULT_TTL)),
+        CORE_RATE_PER_MINUTE=int(os.environ.get("CORE_RATE_PER_MINUTE", throttle.DEFAULT_PER_MINUTE)),  # 0 = off
         CLOCK=time.time,  # tests swap in a fake clock
     )
     if test_config:
@@ -36,6 +37,8 @@ def create_app(test_config=None):
         user_agent=f"mini-cypris/{VERSION}",
         transport=app.config["CORE_TRANSPORT"],
     )
+    # one window for the whole process: every CORE call from every thread takes a slot
+    app.extensions["throttle"] = throttle.Throttle(app.config["CORE_RATE_PER_MINUTE"], clock=app.config["CLOCK"])
     app.register_blueprint(api, url_prefix="/api")
 
     dist = app.config["FRONTEND_DIST"]

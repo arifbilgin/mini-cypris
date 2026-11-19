@@ -92,8 +92,9 @@ def db_path(tmp_path):
 @pytest.fixture
 def make_app(core, clock, db_path):
     def build(**config):
+        # throttle off: these tests are about the cache; tests/test_throttle.py covers the throttle
         return create_app({"TESTING": True, "DATABASE": db_path, "CORE_TRANSPORT": httpx.MockTransport(core),
-                           "CLOCK": clock, **config})
+                           "CLOCK": clock, "CORE_RATE_PER_MINUTE": 0, **config})
     return build
 
 

@@ -14,6 +14,7 @@ from .core_client import (
 )
 from .db import get_db
 from .query import QueryError, check
+from .throttle import ThrottledCore
 
 api = Blueprint("api", __name__)
 
@@ -51,7 +52,7 @@ def search():
     limit = int(raw_limit)
 
     clock = current_app.config["CLOCK"]
-    cache = SearchCache(get_db(), current_app.extensions["core"], ttl=current_app.config["CACHE_TTL"], clock=clock)
+    cache = SearchCache(get_db(), _core(), ttl=current_app.config["CACHE_TTL"], clock=clock)
     try:
         result = cache.search(q, limit)
     except CoreError as exc:
@@ -82,7 +83,7 @@ def aggregate():
     if problem:
         return problem
     clock = current_app.config["CLOCK"]
-    agg = AggregateCache(get_db(), current_app.extensions["core"], ttl=current_app.config["CACHE_TTL"], clock=clock)
+    agg = AggregateCache(get_db(), _core(), ttl=current_app.config["CACHE_TTL"], clock=clock)
     try:
         result = agg.years(q)
     except CoreError as exc:
@@ -103,6 +104,11 @@ def aggregate():
     })
     response.headers["X-Cache"] = result.status.upper()
     return response
+
+
+def _core() -> ThrottledCore:
+    """The CORE client behind the process-wide throttle."""
+    return ThrottledCore(current_app.extensions["core"], current_app.extensions["throttle"])
 
 
 def _read_query():
@@ -128,9 +134,11 @@ def _core_error(exc: CoreError, now: float):
     if isinstance(exc, CoreBadQuery):
         return _error(400, "core_rejected_query", str(exc))
     if isinstance(exc, CoreRateLimited):
+        # our own throttle or CORE itself; either way the user just waits
         wait = max(1, exc.resets_at - int(now)) if exc.resets_at else 1
-        return _error(429, "core_rate_limited", "CORE's rate limit was reached; try again shortly",
-                      {"Retry-After": str(wait)})
+        return (jsonify(error="core_rate_limited", retry_after=wait,
+                        message=f"CORE allows about 10 requests a minute. Try again in {wait} s."),
+                429, {"Retry-After": str(wait)})
     if isinstance(exc, CoreTimeout):
         return _error(504, "core_timeout", "CORE did not answer in time")
     if isinstance(exc, CoreUnavailable):
