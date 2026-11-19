@@ -2,6 +2,7 @@ import time
 
 from flask import Blueprint, current_app, jsonify, request
 
+from .aggregates import AggregateCache
 from .cache import SearchCache
 from .core_client import (
     MAX_LIMIT,
@@ -39,11 +40,9 @@ def hello():
 @api.get("/search")
 def search():
     """Top `limit` papers for `q`, served through the SQLite cache."""
-    q = request.args.get("q", "")
-    if not q.strip():
-        return _error(400, "bad_request", "q is required")
-    if len(q) > MAX_QUERY_LENGTH:
-        return _error(400, "bad_request", f"q is longer than {MAX_QUERY_LENGTH} characters")
+    q, problem = _read_query()
+    if problem:
+        return problem
     raw_limit = request.args.get("limit", str(DEFAULT_LIMIT)).strip()
     # ASCII digits only: int() would also accept "+5", "1_0" and "５"
     if not (raw_limit.isascii() and raw_limit.isdigit()) or not 1 <= int(raw_limit) <= MAX_LIMIT:
@@ -73,6 +72,46 @@ def search():
     response = jsonify(body)
     response.headers["X-Cache"] = result.status.upper()
     return response
+
+
+@api.get("/aggregate")
+def aggregate():
+    """Papers per publication year across ALL matches of `q` (not just one page), cached."""
+    q, problem = _read_query()
+    if problem:
+        return problem
+    clock = current_app.config["CLOCK"]
+    agg = AggregateCache(get_db(), current_app.extensions["core"], ttl=current_app.config["CACHE_TTL"], clock=clock)
+    try:
+        result = agg.years(q)
+    except CoreError as exc:
+        return _core_error(exc, clock())
+    response = jsonify({
+        "query": result.query,
+        "field": "yearPublished",
+        "total_hits": result.total_hits,
+        "years": result.years,
+        "unknown_year": result.unknown_year,
+        "implausible_years": result.implausible,
+        "cache": {
+            "status": result.status,
+            "fetched_at": result.fetched_at,
+            "age_seconds": max(0, int(clock()) - result.fetched_at),
+            "error": result.error,
+        },
+    })
+    response.headers["X-Cache"] = result.status.upper()
+    return response
+
+
+def _read_query():
+    """(q, None) if q is usable, else (None, an error response)."""
+    q = request.args.get("q", "")
+    if not q.strip():
+        return None, _error(400, "bad_request", "q is required")
+    if len(q) > MAX_QUERY_LENGTH:
+        return None, _error(400, "bad_request", f"q is longer than {MAX_QUERY_LENGTH} characters")
+    return q, None
 
 
 def _error(status: int, code: str, message: str, headers: dict | None = None):
