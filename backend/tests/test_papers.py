@@ -98,6 +98,11 @@ def test_real_abstract_with_entities_is_cleaned():
     ("x &lt; 5", "x < 5"),
     ("&lt;p&gt;&lt;/p&gt;", None),  # nothing left
     ("Plain text.", "Plain text."),
+    ("Drone Delivery&lt;/p", "Drone Delivery"),  # seen live 2026-11-19: CORE cut the closing tag off
+    ("Drone Delivery</jats:p", "Drone Delivery"),
+    ("Delivery <jats:p", "Delivery"),
+    ("p < 0.05", "p < 0.05"),  # not a tag
+    ("x <y", "x"),  # trade-off: a bare <word at the very end reads as a cut-off tag
 ])
 def test_abstract_cleaning(value, expected):
     assert from_core({"id": 1, "abstract": value}, NOW)["abstract"] == expected

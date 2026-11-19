@@ -13,6 +13,8 @@ import time
 
 # Only things that look like real tags (<p>, </jats:p>, <br/>), so "a < b > c" survives.
 _TAG = re.compile(r"</?[A-Za-z][\w:-]*(?:\s[^<>]*)?/?>")
+# CORE cuts long fields off, sometimes inside a closing tag: "...Drone Delivery</p"
+_CUT_TAG = re.compile(r"</?[A-Za-z][\w:-]*$")
 _SPACE = re.compile(r"\s+")
 _AUTHOR_ID = re.compile(r"\s*\(\d+\)")
 
@@ -24,7 +26,7 @@ def text(value: str) -> str:
         if decoded == value:
             break
         value = decoded
-    value = _TAG.sub(" ", value)
+    value = _CUT_TAG.sub("", _TAG.sub(" ", value).rstrip())
     return _SPACE.sub(" ", value).strip()
 
 
