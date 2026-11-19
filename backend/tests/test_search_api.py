@@ -180,7 +180,8 @@ def test_first_search_is_a_miss_and_returns_cores_ranking(client, core):
 
 def test_result_shape(client):
     paper = get(client, limit=1).get_json()["results"][0]
-    assert set(paper) == {"id", "source", "external_id", "title", "authors", "year", "publisher", "doi", "pdf_url", "abstract"}
+    assert set(paper) == {"id", "source", "external_id", "title", "authors", "year", "publisher", "doi", "pdf_url", "abstract",
+                          "core_url"}
     assert paper["source"] == "core"
     assert paper["external_id"] == "1"
     assert paper["title"] == "Paper 1"
