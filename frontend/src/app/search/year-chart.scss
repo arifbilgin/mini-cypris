@@ -1,0 +1,67 @@
+:host {
+  display: block;
+  position: relative;
+}
+.frame {
+  position: relative;
+}
+svg {
+  display: block;
+  overflow: visible;
+}
+.grid line {
+  stroke: var(--grid);
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+}
+.tick {
+  fill: var(--text-muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.bars path {
+  fill: var(--series-1);
+  transition: opacity 120ms;
+}
+.frame:hover .bars path:not(.active) {
+  opacity: 0.55;
+}
+.peak {
+  fill: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+}
+.hits rect {
+  fill: transparent;
+}
+.tooltip {
+  position: absolute;
+  transform: translate(-50%, calc(-100% - 10px));
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: var(--text-primary);
+  color: var(--surface-1);
+  font-size: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.table-view {
+  margin-top: 8px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  summary {
+    cursor: pointer;
+    width: fit-content;
+  }
+  table {
+    margin-top: 8px;
+    border-collapse: collapse;
+    font-variant-numeric: tabular-nums;
+  }
+  th,
+  td {
+    padding: 2px 16px 2px 0;
+    text-align: right;
+    border-bottom: 1px solid var(--grid);
+  }
+}

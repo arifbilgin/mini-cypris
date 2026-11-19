@@ -1,19 +1,20 @@
-<main class="shell">
-  <h1>Hello, Mini-Cypris</h1>
-  <p class="sub">Angular {{ angularVersion }} + Flask</p>
-
-  @if (hello(); as h) {
-    <p class="msg">{{ h.message }}</p>
-  } @else if (error()) {
-    <p class="msg error">{{ error() }}</p>
-  } @else {
-    <p class="msg muted">Calling the API…</p>
-  }
-
-  @if (health(); as hc) {
-    <dl class="health">
-      <dt>API</dt><dd>{{ hc.status }} · v{{ hc.version }}</dd>
-      <dt>Database</dt><dd>{{ hc.db }} · {{ hc.tables.join(', ') }}</dd>
-    </dl>
-  }
+<a class="skip" href="#main">Skip to search</a>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="/" aria-label="Mini-Cypris home">
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+        <circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2.2" />
+        <path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" />
+      </svg>
+      Mini-Cypris
+    </a>
+    <span class="tagline">Boolean search over open-access research</span>
+  </div>
+</header>
+<main id="main" class="wrap">
+  <router-outlet />
 </main>
+<footer class="wrap foot">
+  Paper data from <a href="https://core.ac.uk/" rel="noopener" target="_blank">CORE</a> (core.ac.uk).
+  Cached for 24 hours.
+</footer>

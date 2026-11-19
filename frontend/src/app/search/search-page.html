@@ -1,0 +1,204 @@
+<form class="search" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  <div class="fields">
+    <div class="field query">
+      <label for="q">Boolean query</label>
+      <input
+        id="q"
+        type="search"
+        formControlName="q"
+        placeholder="drone AND (package OR delivery)"
+        autocomplete="off"
+        spellcheck="false"
+        [attr.aria-invalid]="(form.controls.q.invalid && form.controls.q.touched) || !!queryError()"
+        aria-describedby="q-help q-error"
+      />
+    </div>
+    <div class="field limit">
+      <label for="limit">Papers <span class="range">1–{{ maxLimit }}</span></label>
+      <input
+        id="limit"
+        type="number"
+        inputmode="numeric"
+        min="1"
+        [max]="maxLimit"
+        step="1"
+        formControlName="limit"
+        [attr.aria-invalid]="form.controls.limit.invalid && form.controls.limit.touched"
+        aria-describedby="limit-error"
+      />
+    </div>
+    <button type="submit" class="primary" [disabled]="results().state === 'loading'">Search</button>
+  </div>
+
+  <div class="messages">
+    <p id="q-error" class="field-error" role="alert">
+      @if (form.controls.q.touched && form.controls.q.errors; as e) {
+        @if (e['required']) {
+          Enter a search query.
+        } @else if (e['maxlength']) {
+          Keep the query under {{ e['maxlength'].requiredLength | number }} characters.
+        }
+      } @else if (queryError()) {
+        {{ queryError() }}
+      }
+    </p>
+    <p id="limit-error" class="field-error" role="alert">
+      @if (form.controls.limit.touched && form.controls.limit.invalid) {
+        Choose a whole number of papers from 1 to {{ maxLimit }}.
+      }
+    </p>
+  </div>
+
+  <p id="q-help" class="help">
+    Combine terms with <code>AND</code>, <code>OR</code>, <code>NOT</code> and parentheses. Use
+    <code>"quotes"</code> for a phrase and <code>title:</code> to search one field. Terms with no
+    operator are OR'ed.
+  </p>
+</form>
+
+@switch (results().state) {
+  @case ('idle') {
+    <section class="welcome" aria-label="Getting started">
+      <h2>Search open-access research papers</h2>
+      <p>Papers come from <a href="https://core.ac.uk/" rel="noopener" target="_blank">CORE</a>, which collects
+        open-access research from repositories and journals worldwide. Try one of these:</p>
+      <ul class="examples">
+        @for (ex of examples; track ex) {
+          <li><button type="button" class="chip" (click)="useExample(ex)">{{ ex }}</button></li>
+        }
+      </ul>
+    </section>
+  }
+  @case ('loading') {
+    <div class="status" role="status">Searching CORE…</div>
+    <ul class="results skeleton" aria-hidden="true">
+      @for (i of [1, 2, 3]; track i) {
+        <li class="card"><span></span><span></span><span></span></li>
+      }
+    </ul>
+  }
+}
+
+@let r = results();
+@if (r.state === 'error' && !queryError()) {
+  <section class="notice" [class.warn]="r.error.kind === 'rate_limited'" role="alert">
+    @if (r.error.kind === 'rate_limited') {
+      <h2>Rate limited</h2>
+      <p>{{ r.error.message }}</p>
+      <button type="button" (click)="retry()" [disabled]="retryIn() > 0">
+        {{ retryIn() > 0 ? 'Retry in ' + retryIn() + ' s' : 'Retry now' }}
+      </button>
+    } @else {
+      <h2>Search failed</h2>
+      <p>{{ r.error.message }}</p>
+      <button type="button" (click)="retry()">Try again</button>
+    }
+  </section>
+}
+
+@if (r.state === 'ok') {
+  @let res = r.data;
+  <div class="summary" role="status">
+    <p>
+      <strong>{{ res.total_hits | number }}</strong> {{ res.total_hits === 1 ? 'paper matches' : 'papers match' }}
+      @if (res.count) {
+        <span class="muted">· showing the top {{ res.count | number }}</span>
+      }
+    </p>
+    <p class="cache" [class.warn]="res.cache.status === 'stale' || res.cache.status === 'partial'">
+      @switch (res.cache.status) {
+        @case ('stale') { CORE is unavailable, so these results are from {{ ago(res.cache.age_seconds) }}. }
+        @case ('partial') { CORE is unavailable, so only the {{ res.count }} cached results are shown. }
+        @case ('hit') { Cached {{ ago(res.cache.age_seconds) }} }
+        @default { Fresh from CORE }
+      }
+    </p>
+  </div>
+
+  @if (res.total_hits) {
+    @let c = chart();
+    <section class="card chart-card" aria-labelledby="chart-title">
+      <header>
+        <h2 id="chart-title">Papers per year</h2>
+        <p class="muted">All {{ res.total_hits | number }} matches, not just the {{ res.count }} listed</p>
+      </header>
+      @if (c.state === 'ok') {
+        @if (c.data.years.length) {
+          <app-year-chart [years]="c.data.years" />
+        } @else {
+          <p class="chart-empty">No matching paper has a publication year.</p>
+        }
+        @if (c.data.unknown_year) {
+          <p class="note">
+            {{ c.data.unknown_year | number }} of {{ c.data.total_hits | number }} papers
+            ({{ (c.data.unknown_year / c.data.total_hits) * 100 | number: '1.0-1' }}%) have no usable year and are
+            not shown{{ implausible(c.data) ? ', including some dated ' + implausible(c.data) : '' }}.
+          </p>
+        }
+      } @else if (c.state === 'error') {
+        <div class="chart-empty">
+          <p>{{ c.error.kind === 'rate_limited' ? 'The chart has to wait for CORE’s rate limit.' : c.error.message }}</p>
+          <button type="button" (click)="retryChart()">Load the chart</button>
+        </div>
+      } @else {
+        <div class="chart-empty" role="status">Counting papers per year…</div>
+      }
+    </section>
+  }
+
+  @if (res.results.length) {
+    <ol class="results">
+      @for (p of res.results; track p.id) {
+        <li class="card paper">
+          <h3>
+            @if (link(p); as href) {
+              <a [href]="href" target="_blank" rel="noopener">{{ p.title }}</a>
+            } @else {
+              {{ p.title }}
+            }
+          </h3>
+          <p class="meta">
+            @if (p.authors.length) {
+              <span>{{ authors(p) }}</span>
+            }
+            @if (p.year) {
+              <span>{{ p.year }}</span>
+            }
+            @if (p.publisher) {
+              <span class="muted">{{ p.publisher }}</span>
+            }
+          </p>
+          @if (p.abstract) {
+            <p class="abstract" [class.clamped]="isLong(p) && !expanded().has(p.id)" [id]="'abs-' + p.id">
+              {{ p.abstract }}
+            </p>
+            @if (isLong(p)) {
+              <button type="button" class="link" (click)="toggle(p)" [attr.aria-expanded]="expanded().has(p.id)"
+                [attr.aria-controls]="'abs-' + p.id">
+                {{ expanded().has(p.id) ? 'Show less' : 'Show more' }}
+              </button>
+            }
+          } @else {
+            <p class="abstract muted">No abstract available.</p>
+          }
+          <p class="links">
+            @if (p.doi) {
+              <a [href]="doiUrl(p.doi)" target="_blank" rel="noopener">DOI {{ p.doi }}</a>
+            }
+            @if (p.pdf_url) {
+              <a [href]="p.pdf_url" target="_blank" rel="noopener">PDF</a>
+            }
+            @if (p.core_url) {
+              <a [href]="p.core_url" target="_blank" rel="noopener">View on CORE</a>
+            }
+          </p>
+        </li>
+      }
+    </ol>
+  } @else {
+    <section class="notice">
+      <h2>No papers match</h2>
+      <p>Try fewer terms, <code>OR</code> instead of <code>AND</code>, or check the spelling.</p>
+    </section>
+  }
+}

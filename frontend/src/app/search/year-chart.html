@@ -1,0 +1,71 @@
+<div class="frame" (mouseleave)="hovered.set(null)">
+  <svg
+    [attr.width]="width()"
+    [attr.height]="height"
+    [attr.viewBox]="'0 0 ' + width() + ' ' + height"
+    role="img"
+    [attr.aria-label]="label()"
+  >
+    <g class="grid" aria-hidden="true">
+      @for (t of yTicks(); track t) {
+        <line [attr.x1]="margin.left" [attr.x2]="width() - margin.right" [attr.y1]="yOf(t)" [attr.y2]="yOf(t)" />
+        <text class="tick" [attr.x]="margin.left - 8" [attr.y]="yOf(t)" dy="0.32em" text-anchor="end">
+          {{ compact(t) }}
+        </text>
+      }
+    </g>
+
+    <g class="bars">
+      @for (b of bars(); track b.year) {
+        <path [attr.d]="b.path" [class.active]="hovered()?.year === b.year" />
+      }
+    </g>
+
+    <g class="x" aria-hidden="true">
+      @for (t of xTicks(); track t.year) {
+        <text class="tick" [attr.x]="t.x" [attr.y]="height - 6" text-anchor="middle">{{ t.year }}</text>
+      }
+    </g>
+
+    @if (peakBar(); as p) {
+      <text class="peak" [attr.x]="p.x + p.w / 2" [attr.y]="p.y - 6" text-anchor="middle" aria-hidden="true">
+        {{ p.count | number }}
+      </text>
+    }
+
+    <g class="hits" aria-hidden="true">
+      @for (b of bars(); track b.year) {
+        <rect
+          [attr.x]="b.hitX"
+          [attr.y]="margin.top"
+          [attr.width]="b.hitW"
+          [attr.height]="height - margin.top - margin.bottom"
+          (mouseenter)="hovered.set(b)"
+        />
+      }
+    </g>
+  </svg>
+
+  @if (hovered(); as h) {
+    <div class="tooltip" [style.left.px]="tooltipLeft(h)" [style.top.px]="h.y" aria-hidden="true">
+      <strong>{{ h.year }}</strong> {{ h.count | number }} {{ h.count === 1 ? 'paper' : 'papers' }}
+    </div>
+  }
+</div>
+
+<details class="table-view">
+  <summary>Show as a table</summary>
+  <table>
+    <caption class="sr-only">Papers per publication year</caption>
+    <thead>
+      <tr><th scope="col">Year</th><th scope="col">Papers</th></tr>
+    </thead>
+    <tbody>
+      @for (y of series(); track y.year) {
+        @if (y.count) {
+          <tr><td>{{ y.year }}</td><td>{{ y.count | number }}</td></tr>
+        }
+      }
+    </tbody>
+  </table>
+</details>
